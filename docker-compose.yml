@@ -1,0 +1,45 @@
+services:
+  flarum:
+    image: ghcr.io/V1ncit/flarum:latest
+    container_name: flarum
+    ports:
+      - "8080:80"
+    environment:
+      FLARUM_DB_HOST: flarum-mysql
+      FLARUM_DB_DATABASE: ${MYSQL_DATABASE}
+      FLARUM_DB_USERNAME: ${MYSQL_USER}
+      FLARUM_DB_PASSWORD: ${MYSQL_PASSWORD}
+    depends_on:
+      - flarum-mysql
+
+  flarum-mysql:
+    image: mysql:8.0
+    container_name: flarum-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+
+  tor:
+    image: osminogin/tor-simple
+    container_name: tor-hidden-service
+    volumes:
+      - ./tor-data:/var/lib/tor
+    environment:
+      - TOR_SERVICE_HOST=flarum
+      - TOR_SERVICE_PORT=80
+    networks:
+      - internal
+    depends_on:
+      - flarum
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  db_data:
+  tor-data:
